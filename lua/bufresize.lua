@@ -1,4 +1,3 @@
-local vim = vim
 local vim_size = {}
 local win_size = {}
 local winlayout = nil

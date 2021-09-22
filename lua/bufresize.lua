@@ -98,6 +98,7 @@ local setup = function(cfg)
 			{ "n", "<C-w>+", "<C-w>+", opts },
 			{ "n", "<C-w>-", "<C-w>-", opts },
 			{ "n", "<C-w>_", "<C-w>_", opts },
+			{ "n", "<C-w>=", "<C-w>=", opts },
 			{ "n", "<C-w>|", "<C-w>|", opts },
 		}
 	cfg.resize = cfg.resize or {}

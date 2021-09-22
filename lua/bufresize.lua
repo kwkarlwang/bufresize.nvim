@@ -70,18 +70,51 @@ local apply = function()
 		recurse(winlayout, vim_size.width, vim_size.height - vim.o.cmdheight, ui.width, ui.height - vim.o.cmdheight)
 	end
 end
-local on_resize = function()
+local resize = function()
 	apply()
 	register()
 end
-local setup = function()
-	vim.cmd([[autocmd! WinEnter,BufWinEnter * lua require('bufresize').register()]])
-	vim.cmd([[autocmd! VimResized * lua require('bufresize').on_resize()]])
+
+local function create_augroup(name, events, func)
+	vim.cmd("augroup " .. name)
+	vim.cmd("autocmd!")
+	vim.cmd("autocmd " .. table.concat(events, ",") .. " * " .. func)
+	vim.cmd("augroup END")
+end
+
+local function create_keymap(mode, from, to, func, opts)
+	vim.api.nvim_set_keymap(mode, from, to .. " " .. func, opts)
+end
+
+local setup = function(cfg)
+	cfg = cfg or {}
+	local opts = { noremap = true, silent = true }
+	cfg.register = cfg.register or {}
+	cfg.register.trigger_events = cfg.register.trigger_events or { "WinEnter", "BufWinEnter" }
+	cfg.register.keys = cfg.register.keys
+		or {
+			{ "n", "<C-w><", "<C-w><", opts },
+			{ "n", "<C-w>>", "<C-w>>", opts },
+			{ "n", "<C-w>+", "<C-w>+", opts },
+			{ "n", "<C-w>-", "<C-w>-", opts },
+			{ "n", "<C-w>_", "<C-w>_", opts },
+			{ "n", "<C-w>|", "<C-w>|", opts },
+		}
+	cfg.resize = cfg.resize or {}
+	cfg.resize.trigger_events = cfg.resize.trigger_events or { "VimResized" }
+	cfg.resize.keys = cfg.resize.keys or {}
+	create_augroup("Register", cfg.register.trigger_events, "lua require('bufresize').register()")
+	create_augroup("Resize", cfg.resize.trigger_events, "lua require('bufresize').resize()")
+	for _, key in pairs(cfg.register.keys) do
+		create_keymap(key[1], key[2], key[3], "<cmd>lua require('bufresize').register()<cr>", key[4])
+	end
+	for _, key in pairs(cfg.resize.keys) do
+		create_keymap(key[1], key[2], key[3], "<cmd>lua require('bufresize').resize()<cr>", key[4])
+	end
 end
 
 return {
-	setup = setup,
 	register = register,
-	apply = apply,
-	on_resize = on_resize,
+	resize = resize,
+	setup = setup,
 }

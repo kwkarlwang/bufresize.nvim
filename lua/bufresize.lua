@@ -1,45 +1,35 @@
 local vim_size = {}
 local win_size = {}
-local winlayout = nil
+local winlayout = {}
 local register = function()
 	local ui = vim.api.nvim_list_uis()[1]
 	vim_size.width = ui.width
 	vim_size.height = ui.height
 	win_size = {}
-	for _, winid in pairs(vim.api.nvim_tabpage_list_wins(0)) do
-		win_size[winid] = {
-			width = vim.api.nvim_win_get_width(winid),
-			height = vim.api.nvim_win_get_height(winid),
-		}
+	winlayout = {}
+	local tabinfo = vim.fn.gettabinfo()
+	for _, tab in pairs(tabinfo) do
+		win_size[tab.tabnr] = {}
+		for _, winid in pairs(tab.windows) do
+			win_size[tab.tabnr][winid] = {
+				width = vim.api.nvim_win_get_width(winid),
+				height = vim.api.nvim_win_get_height(winid),
+			}
+		end
+		winlayout[tab.tabnr] = vim.fn.winlayout(tab.tabnr)
 	end
-	winlayout = vim.fn.winlayout()
 end
-local function count(layout)
-	if layout == nil or layout[1] == "leaf" then
-		return 0, 0
-	end
-	local name, list = layout[1], layout[2]
-	local width, height = 0, 0
-	if name == "row" then
-		width = #list - 1
-	else
-		height = #list
-	end
-	for _, elem in pairs(list) do
-		local res_width, res_height = count(elem)
-		width = width + res_width
-		height = height + res_height
-	end
-	return width, height
+local gototab = function(num)
+	vim.cmd([[execute "normal! ]] .. tostring(num) .. [[gt"]])
 end
-local function recurse(layout, old_width, old_height, new_width, new_height)
+local function recurse(layout, old_width, old_height, new_width, new_height, tabnr)
 	if layout == nil then
 		return
 	end
 	local name, sublayout = layout[1], layout[2]
 	if name == "leaf" then
 		local winid = sublayout
-		local win_dim = win_size[winid]
+		local win_dim = win_size[tabnr][winid]
 		if win_dim ~= nil then
 			local width_percent = win_dim.width / old_width
 			-- minus one for the status line
@@ -57,16 +47,28 @@ local function recurse(layout, old_width, old_height, new_width, new_height)
 			new_height = new_height - #sublayout + 1
 		end
 		for _, elem in pairs(sublayout) do
-			recurse(elem, old_width, old_height, new_width, new_height)
+			recurse(elem, old_width, old_height, new_width, new_height, tabnr)
 		end
 	end
 end
 local apply = function()
-	if winlayout == nil then
+	local curtabnr = vim.fn.tabpagenr()
+	if winlayout[curtabnr] == nil then
 		vim.fn.wincmd("=")
 	else
 		local ui = vim.api.nvim_list_uis()[1]
-		recurse(winlayout, vim_size.width, vim_size.height - vim.o.cmdheight, ui.width, ui.height - vim.o.cmdheight)
+		for tabnr, layout in pairs(winlayout) do
+			gototab(tabnr)
+			recurse(
+				layout,
+				vim_size.width,
+				vim_size.height - vim.o.cmdheight,
+				ui.width,
+				ui.height - vim.o.cmdheight,
+				tabnr
+			)
+		end
+		gototab(curtabnr)
 	end
 end
 local resize = function()
@@ -82,7 +84,7 @@ local function create_augroup(name, events, func)
 end
 
 local function create_keymap(mode, from, to, func, opts)
-	vim.api.nvim_set_keymap(mode, from, to .. " " .. func, opts)
+	vim.api.nvim_set_keymap(mode, from, to .. func, opts)
 end
 
 local setup = function(cfg)

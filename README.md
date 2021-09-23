@@ -1,8 +1,6 @@
 # bufresize.nvim
 
-
 https://user-images.githubusercontent.com/38927155/134293002-8b710772-3d7c-49fb-a06e-97f09010c104.mov
-
 
 bufresize.nvim is a very simple plugin that does one thing, it keeps your buffers width and height in proportion when the terminal window is resized.
 For example, if you have two buffers side by side, with the left buffer taking up 70% of the terminal width and the right buffer taking up 30% of the terminal width.

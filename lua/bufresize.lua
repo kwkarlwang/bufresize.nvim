@@ -54,7 +54,7 @@ end
 local apply = function()
 	local curtabnr = vim.fn.tabpagenr()
 	if winlayout[curtabnr] == nil then
-        vim.cmd("wincmd =")
+		vim.cmd("wincmd =")
 	else
 		local ui = vim.api.nvim_list_uis()[1]
 		for tabnr, layout in pairs(winlayout) do
@@ -101,6 +101,7 @@ local setup = function(cfg)
 			{ "n", "<C-w>_", "<C-w>_", opts },
 			{ "n", "<C-w>=", "<C-w>=", opts },
 			{ "n", "<C-w>|", "<C-w>|", opts },
+			{ "n", "<LeftDrag>", "<LeftDrag>", opts },
 		}
 	cfg.resize = cfg.resize or {}
 	cfg.resize.trigger_events = cfg.resize.trigger_events or { "VimResized" }

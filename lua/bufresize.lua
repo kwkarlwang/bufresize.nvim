@@ -54,7 +54,7 @@ end
 local apply = function()
 	local curtabnr = vim.fn.tabpagenr()
 	if winlayout[curtabnr] == nil then
-		vim.fn.wincmd("=")
+        vim.cmd("wincmd =")
 	else
 		local ui = vim.api.nvim_list_uis()[1]
 		for tabnr, layout in pairs(winlayout) do

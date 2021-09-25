@@ -88,8 +88,8 @@ local function create_keymap(mode, from, to, func, opts)
 end
 
 local setup = function(cfg)
-	cfg = cfg or {}
 	local opts = { noremap = true, silent = true }
+	cfg = cfg or {}
 	cfg.register = cfg.register or {}
 	cfg.register.trigger_events = cfg.register.trigger_events or { "WinEnter", "BufWinEnter" }
 	cfg.register.keys = cfg.register.keys
@@ -101,7 +101,8 @@ local setup = function(cfg)
 			{ "n", "<C-w>_", "<C-w>_", opts },
 			{ "n", "<C-w>=", "<C-w>=", opts },
 			{ "n", "<C-w>|", "<C-w>|", opts },
-			{ "n", "<LeftDrag>", "<LeftDrag>", opts },
+			{ "", "<LeftRelease>", "<LeftRelease>", opts },
+			{ "i", "<LeftRelease>", "<LeftRelease><C-o>", opts },
 		}
 	cfg.resize = cfg.resize or {}
 	cfg.resize.trigger_events = cfg.resize.trigger_events or { "VimResized" }

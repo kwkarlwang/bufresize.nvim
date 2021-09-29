@@ -1,7 +1,11 @@
 local vim_size = {}
 local win_size = {}
 local winlayout = {}
+local can_register = true
 local register = function()
+	if can_register == false then
+		return
+	end
 	local ui = vim.api.nvim_list_uis()[1]
 	vim_size.width = ui.width
 	vim_size.height = ui.height
@@ -52,6 +56,7 @@ local function recurse(layout, old_width, old_height, new_width, new_height, tab
 	end
 end
 local apply = function()
+	can_register = false
 	local curtabnr = vim.fn.tabpagenr()
 	if winlayout[curtabnr] == nil then
 		vim.cmd("wincmd =")
@@ -70,10 +75,17 @@ local apply = function()
 		end
 		gototab(curtabnr)
 	end
+	can_register = true
 end
 local resize = function()
-	apply()
-	register()
+	if vim.fn.mode() == "t" then
+		-- have to use this workaround until normal! is supported
+		local command = [[<C-\><C-n><cmd>lua require('bufresize').resize()<cr>i]]
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(command, true, true, true), "n", true)
+	else
+		apply()
+		register()
+	end
 end
 
 local function create_augroup(name, events, func)
@@ -107,8 +119,12 @@ local setup = function(cfg)
 	cfg.resize = cfg.resize or {}
 	cfg.resize.trigger_events = cfg.resize.trigger_events or { "VimResized" }
 	cfg.resize.keys = cfg.resize.keys or {}
-	create_augroup("Register", cfg.register.trigger_events, "lua require('bufresize').register()")
-	create_augroup("Resize", cfg.resize.trigger_events, "lua require('bufresize').resize()")
+	if #cfg.register.trigger_events > 0 then
+		create_augroup("Register", cfg.register.trigger_events, "lua require('bufresize').register()")
+	end
+	if #cfg.resize.trigger_events > 0 then
+		create_augroup("Resize", cfg.resize.trigger_events, "lua require('bufresize').resize()")
+	end
 	for _, key in pairs(cfg.register.keys) do
 		create_keymap(key[1], key[2], key[3], "<cmd>lua require('bufresize').register()<cr>", key[4])
 	end

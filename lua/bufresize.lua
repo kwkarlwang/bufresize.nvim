@@ -39,8 +39,12 @@ local function recurse(layout, old_width, old_height, new_width, new_height, tab
 			-- minus one for the status line
 			local height_percent = win_dim.height / (old_height - 1)
 			-- +0.5 for rounding
-			vim.api.nvim_win_set_width(winid, math.floor(width_percent * new_width + 0.5))
-			vim.api.nvim_win_set_height(winid, math.floor(height_percent * (new_height - 1) + 0.5))
+			pcall(function()
+				vim.api.nvim_win_set_width(winid, math.floor(width_percent * new_width + 0.5))
+			end)
+			pcall(function()
+				vim.api.nvim_win_set_height(winid, math.floor(height_percent * (new_height - 1) + 0.5))
+			end)
 		end
 	else
 		if name == "row" then

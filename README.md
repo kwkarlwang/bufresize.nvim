@@ -74,6 +74,8 @@ With bufresize
 ---------------         ---------------
 ```
 
+Video demonstrations are available in this [pull request](https://github.com/kwkarlwang/bufresize.nvim/pull/8#issue-1083932435)
+
 ## Prerequistes
 
 - Neovim 0.5 or higher

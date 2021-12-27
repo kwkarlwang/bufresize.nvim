@@ -15,6 +15,9 @@ local register = function()
 		return
 	end
 	local ui = vim.api.nvim_list_uis()[1]
+	if ui == nil then
+		return
+	end
 	vim_size.width = ui.width
 	vim_size.height = ui.height
 	win_size = {}

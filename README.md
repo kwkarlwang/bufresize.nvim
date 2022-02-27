@@ -109,6 +109,12 @@ bufresize.nvim setup provides two options, `register` and `resize`. `register` a
 
 `resize` is use to apply the registered state to the current state so that the current buffers will have the same proportion as the registered states.
 
+`resize` also has the key `increment`, which will round the height and width percent of a window to the nearest increment.
+For example, with the `increment` set to 5, if the neovim window now takes up 52.3% of the terminal window width, after resizing, the neovim window
+width percent will round to the nearest increment, which in this case is 50%.
+If the `increment` is set to 2, the neovim window width percent would be round to 52%.
+To disable rounding to the nearest increment, set `increment` to `false`.
+
 ### Example configuration:
 
 ```lua
@@ -133,6 +139,7 @@ use({
             resize = {
                 keys = {},
                 trigger_events = { "VimResized" },
+                increment = 5,
             },
         })
     end,
@@ -169,6 +176,7 @@ use({
             resize = {
                 keys = {},
                 trigger_events = { "VimResized" },
+                increment = false,
             },
         })
     end,

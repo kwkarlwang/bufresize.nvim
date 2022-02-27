@@ -3,6 +3,17 @@ local win_size = {}
 local winlayout = {}
 local can_register = true
 
+local increment = false
+
+local round_percent = function(percent)
+	if increment == false then
+		return percent
+	end
+	percent = percent * 100 / increment
+	percent = math.floor(percent + 0.5) * increment / 100
+	return percent
+end
+
 local block_register = function()
 	can_register = false
 end
@@ -47,9 +58,9 @@ local function recurse_open(layout, old_width, old_height, new_width, new_height
 		local winid = sublayout
 		local win_dim = win_size[tabnr][winid]
 		if win_dim ~= nil then
-			local width_percent = win_dim.width / old_width
+			local width_percent = round_percent(win_dim.width / old_width)
 			-- minus one for the status line
-			local height_percent = win_dim.height / (old_height - 1)
+			local height_percent = round_percent(win_dim.height / (old_height - 1))
 			-- +0.5 for rounding
 			pcall(function()
 				vim.api.nvim_win_set_width(winid, math.floor(width_percent * new_width + 0.5))
@@ -120,9 +131,9 @@ local function recurse_close(layout, current_windows, old_width, old_height, new
 		local winid = sublayout
 		local win_dim = win_size[tabnr][winid]
 		if win_dim ~= nil then
-			local width_percent = win_dim.width / old_width
+			local width_percent = round_percent(win_dim.width / old_width)
 			-- minus one for the status line
-			local height_percent = win_dim.height / (old_height - 1)
+			local height_percent = round_percent(win_dim.height / (old_height - 1))
 			-- +0.5 for rounding
 			pcall(function()
 				vim.api.nvim_win_set_width(winid, math.floor(width_percent * new_width + 0.5))
@@ -204,9 +215,9 @@ local function recurse(layout, old_width, old_height, new_width, new_height, tab
 		local winid = sublayout
 		local win_dim = win_size[tabnr][winid]
 		if win_dim ~= nil then
-			local width_percent = win_dim.width / old_width
+			local width_percent = round_percent(win_dim.width / old_width)
 			-- minus one for the status line
-			local height_percent = win_dim.height / (old_height - 1)
+			local height_percent = round_percent(win_dim.height / (old_height - 1))
 			-- +0.5 for rounding
 			pcall(function()
 				vim.api.nvim_win_set_width(winid, math.floor(width_percent * new_width + 0.5))
@@ -285,6 +296,11 @@ local setup = function(cfg)
 	cfg.resize = cfg.resize or {}
 	cfg.resize.trigger_events = cfg.resize.trigger_events or { "VimResized" }
 	cfg.resize.keys = cfg.resize.keys or {}
+	if cfg.resize.increment == false then
+		increment = false
+	else
+		increment = cfg.resize.increment or increment
+	end
 	if #cfg.register.trigger_events > 0 then
 		create_augroup("Register", cfg.register.trigger_events, "lua require('bufresize').register()")
 	end

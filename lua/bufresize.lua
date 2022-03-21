@@ -21,6 +21,15 @@ local unblock_register = function()
 	can_register = true
 end
 
+local tabpage_height = function()
+	local tabpage_type = vim.o.showtabline
+	if tabpage_type == 0 or tabpage_type == 1 and #vim.api.nvim_list_tabpages() < 2 then
+		return 0
+	else
+		return 1
+	end
+end
+
 local register = function()
 	if can_register == false then
 		return
@@ -30,7 +39,7 @@ local register = function()
 		return
 	end
 	vim_size.width = ui.width
-	vim_size.height = ui.height
+	vim_size.height = ui.height - tabpage_height()
 	win_size = {}
 	winlayout = {}
 	local tabinfo = vim.fn.gettabinfo()
@@ -105,7 +114,14 @@ local apply_open = function()
 		local ui = vim.api.nvim_list_uis()[1]
 		local old_width, old_height = vim_size.width, vim_size.height
 		local layout = vim.fn.winlayout(curtabnr)
-		recurse_open(layout, old_width, old_height - vim.o.cmdheight, ui.width, ui.height - vim.o.cmdheight, curtabnr)
+		recurse_open(
+			layout,
+			old_width,
+			old_height - vim.o.cmdheight,
+			ui.width,
+			ui.height - vim.o.cmdheight - tabpage_height(),
+			curtabnr
+		)
 	end
 end
 
@@ -187,7 +203,7 @@ local apply_close = function()
 			old_width,
 			old_height - vim.o.cmdheight,
 			ui.width,
-			ui.height - vim.o.cmdheight,
+			ui.height - vim.o.cmdheight - tabpage_height(),
 			curtabnr
 		)
 	end
@@ -248,7 +264,14 @@ local apply = function()
 		for tabnr, layout in pairs(winlayout) do
 			gototab(tabnr)
 			local old_width, old_height = vim_size.width, vim_size.height
-			recurse(layout, old_width, old_height - vim.o.cmdheight, ui.width, ui.height - vim.o.cmdheight, tabnr)
+			recurse(
+				layout,
+				old_width,
+				old_height - vim.o.cmdheight,
+				ui.width,
+				ui.height - vim.o.cmdheight - tabpage_height(),
+				tabnr
+			)
 		end
 		gototab(curtabnr)
 	end

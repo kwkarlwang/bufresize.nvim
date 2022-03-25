@@ -1,3 +1,28 @@
+local keymap_opts = { noremap = true, silent = true }
+local default_config = {
+	register = {
+		trigger_events = { "WinEnter", "BufWinEnter" },
+		keys = {
+			{ "n", "<C-w><", "<C-w><", keymap_opts },
+			{ "n", "<C-w>>", "<C-w>>", keymap_opts },
+			{ "n", "<C-w>+", "<C-w>+", keymap_opts },
+			{ "n", "<C-w>-", "<C-w>-", keymap_opts },
+			{ "n", "<C-w>_", "<C-w>_", keymap_opts },
+			{ "n", "<C-w>=", "<C-w>=", keymap_opts },
+			{ "n", "<C-w>|", "<C-w>|", keymap_opts },
+			{ "", "<LeftRelease>", "<LeftRelease>", keymap_opts },
+			{ "i", "<LeftRelease>", "<LeftRelease><C-o>", keymap_opts }
+		},
+		ignore = { 'NvimTree' },
+
+	},
+	resize = {
+		trigger_events = { "VimResized" },
+		keys = {},
+		increment = false,
+	}
+}
+
 local vim_size = {}
 local win_size = {}
 local winlayout = {}
@@ -30,7 +55,10 @@ local tabpage_height = function()
 	end
 end
 
-local register = function()
+local register = function(opts)
+
+	local ignore_filetypes = opts and opts.ignore or default_config.register.ignore
+
 	if can_register == false then
 		return
 	end
@@ -46,6 +74,11 @@ local register = function()
 	for _, tab in pairs(tabinfo) do
 		win_size[tab.tabnr] = {}
 		for _, winid in pairs(tab.windows) do
+			local bufnr = vim.api.nvim_win_get_buf(winid)
+			local filetype = vim.api.nvim_buf_get_option(bufnr, 'filetype')
+			if ignore_filetypes ~= nil and not vim.tbl_isempty(ignore_filetypes) and not vim.tbl_contains(ignore_filetypes, filetype) then
+				goto skip
+			end
 			win_size[tab.tabnr][winid] = {
 				width = vim.api.nvim_win_get_width(winid),
 				height = vim.api.nvim_win_get_height(winid),
@@ -53,7 +86,9 @@ local register = function()
 		end
 		winlayout[tab.tabnr] = vim.fn.winlayout(tab.tabnr)
 	end
+	::skip::
 end
+
 local gototab = function(num)
 	vim.cmd([[execute "normal! ]] .. tostring(num) .. [[gt"]])
 end
@@ -299,26 +334,14 @@ local function create_keymap(mode, from, to, func, opts)
 	vim.api.nvim_set_keymap(mode, from, to .. func, opts)
 end
 
-local setup = function(cfg)
-	local opts = { noremap = true, silent = true }
-	cfg = cfg or {}
-	cfg.register = cfg.register or {}
-	cfg.register.trigger_events = cfg.register.trigger_events or { "WinEnter", "BufWinEnter" }
-	cfg.register.keys = cfg.register.keys
-		or {
-			{ "n", "<C-w><", "<C-w><", opts },
-			{ "n", "<C-w>>", "<C-w>>", opts },
-			{ "n", "<C-w>+", "<C-w>+", opts },
-			{ "n", "<C-w>-", "<C-w>-", opts },
-			{ "n", "<C-w>_", "<C-w>_", opts },
-			{ "n", "<C-w>=", "<C-w>=", opts },
-			{ "n", "<C-w>|", "<C-w>|", opts },
-			{ "", "<LeftRelease>", "<LeftRelease>", opts },
-			{ "i", "<LeftRelease>", "<LeftRelease><C-o>", opts },
-		}
-	cfg.resize = cfg.resize or {}
-	cfg.resize.trigger_events = cfg.resize.trigger_events or { "VimResized" }
-	cfg.resize.keys = cfg.resize.keys or {}
+local function merge_config(opts)
+	local merged = vim.tbl_deep_extend("force", {}, default_config, opts or {})
+	default_config = merged
+	return merged
+end
+
+local setup = function(user_opts)
+	local cfg = merge_config(user_opts)
 	if cfg.resize.increment == false then
 		increment = false
 	else
